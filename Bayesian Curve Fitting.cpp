@@ -9,7 +9,7 @@ using namespace std;
 using namespace arma;
 double A = 0.1;		// value of alpha
 double B =12;		//known value of Beta
-const int N=20;		// known value of N, leave one value for testing 251 value
+const int N=20;		// known value of N, leave one value for testing 21 value
 const int M = 4;				//5 or 10 times of dataset size, degree
 void initialize_t(mat&, double[],string);
 mat initialize_phi(mat X, int x, int M);
@@ -17,6 +17,7 @@ mat initialize_phi_t(mat,int,mat,int,int);			//where x =1,2,3,4,5......N
 void initialize_X_data(mat&);
 mat evaluate_s_inverse(mat, mat,mat,mat);			//beta, alpha,X_data and phi of x
 mat sum_phi_T(mat, mat);
+double read_real_value(string);
 
 int main()
 {
@@ -37,7 +38,6 @@ int main()
 	string filename = symbol_name + ".txt";
 	mat t_data = randu<mat>(N, 1);
 	initialize_t(t_data,t_data_copy,filename);
-	//cout << t_data << endl;
 	//********************initialize X**********************
 	mat X_data = randu<mat>(N, 1);
 	initialize_X_data(X_data);
@@ -59,11 +59,22 @@ int main()
 	//cout << S << endl;
 	//*************CALCULATE MEAN****************************
 	mat mean = randu<mat>(1, 1);
-	mean = B*phi_X_transpose*(S*summation_phi);
-	cout << "MEAN OF THE PROB FUNCTION:"<<mean << endl;
-	return 0;
+	mean = B*phi_X_transpose*(S*summation_phi);				//which is also the mode, therefore maximum probable value
+	double predicted_value = as_scalar(mean);				//convert to scalar
+	cout << "Mean and Mode of the probability distribution function:" << predicted_value << endl;
 	//**************CALCULATE VARIANCE************************
-
+	mat variance = randu<mat>(1, 1);
+	variance = (1 / B) + phi_X_transpose * S*phi_X_predict;
+	double variance_value = as_scalar(variance);
+	cout << "Variance of the probability distribution function:" << variance_value << endl;
+	//**************CALCULATE ERROR***************************
+	double actual_value = read_real_value(symbol_name);
+	cout << "The actual value for the company from historical data is:" << actual_value << endl;
+	double absolute_error = predicted_value - actual_value;
+	cout << "The absolute error is:" << absolute_error << endl;;
+	double relative_error = 100 * (predicted_value - actual_value) / actual_value;
+	cout << "The relative error is:" << relative_error << "%" << endl;
+	return 0;
 }
 
 void initialize_t(mat& t, double t_data[],string filename)
@@ -139,6 +150,21 @@ mat evaluate_s_inverse(mat b, mat a,mat X_data, mat phi_x)				//evaluate s inver
 	mat s_inverse = randu<mat>(M, M);
 	s_inverse = (A * identity) + (B * sum_phi_phiT);
 	return s_inverse.i();
+}
+double read_real_value(string symbol)
+{
+	ifstream read;
+	string item;
+	double value;
+	read.open("ActualValues_21st_day.txt");
+	while (!read.eof())
+	{
+		read >> item >> value;
+		if (item == symbol)
+			break;
+	}
+	read.close();
+	return value;
 }
 
 
